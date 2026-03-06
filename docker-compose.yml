@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  deck:
+    build: .
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      PUBLIC_GOOGLE_SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT6ciri7chQvKJBCA087T_ajZTVf87JG5gysGvQiz344aCZ4F6-EFhJSawkYMzaMVxNV58dYk-M9xW7/pub?output=csv"
