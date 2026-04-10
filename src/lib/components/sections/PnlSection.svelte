@@ -4,9 +4,11 @@
 	import HorizontalBarChart from '$lib/components/charts/HorizontalBarChart.svelte';
 	import DonutChart from '$lib/components/charts/DonutChart.svelte';
 	import KpiCard from '$lib/components/ui/KpiCard.svelte';
-	import type { ParsedSheet } from '$lib/services/sheets.js';
+	import NoteTooltip from '$lib/components/ui/NoteTooltip.svelte';
+	import type { ParsedSheet, NotesMap } from '$lib/services/sheets.js';
 
 	export let sheet: ParsedSheet;
+	export let notes: NotesMap = {};
 
 	let years = getAllYears(sheet);
 	let activeYear = years[0] ?? '';
@@ -33,11 +35,17 @@
 
 {#if hasPnl}
 	<div class="kpi-row">
-		<KpiCard label="Sales" value={fmt(kpis.latestSales)} delta={kpis.salesGrowth} deltaLabel="vs prior year" />
-		<KpiCard label="Gross Profit" value={fmt(kpis.latestGrossProfit)} />
+		<KpiCard label="Sales" value={fmt(kpis.latestSales)} delta={kpis.salesGrowth} deltaLabel="vs prior year">
+			{#if notes['Total Revenue']}<NoteTooltip note={notes['Total Revenue']} label="Sales" />{/if}
+		</KpiCard>
+		<KpiCard label="Gross Profit" value={fmt(kpis.latestGrossProfit)}>
+			{#if notes['INCOME']}<NoteTooltip note={notes['INCOME']} label="Income" />{/if}
+		</KpiCard>
 		<KpiCard label="Net Profit" value={fmt(kpis.latestNetProfit)} />
 		{#if slice.pnl['Total expenses']}
-			<KpiCard label="Total Expenses" value={fmt(slice.pnl['Total expenses'])} />
+			<KpiCard label="Total Expenses" value={fmt(slice.pnl['Total expenses'])}>
+				{#if notes['EXPENSES']}<NoteTooltip note={notes['EXPENSES']} label="Expenses" />{/if}
+			</KpiCard>
 		{/if}
 	</div>
 

@@ -4,9 +4,11 @@
 	import BarChart from '$lib/components/charts/BarChart.svelte';
 	import DonutChart from '$lib/components/charts/DonutChart.svelte';
 	import KpiCard from '$lib/components/ui/KpiCard.svelte';
-	import type { ExpensesSheet } from '$lib/services/sheets.js';
+	import NoteTooltip from '$lib/components/ui/NoteTooltip.svelte';
+	import type { ExpensesSheet, NotesMap } from '$lib/services/sheets.js';
 
 	export let sheet: ExpensesSheet;
+	export let notes: NotesMap = {};
 
 	let activeYear = sheet.years[0] ?? '';
 
@@ -38,17 +40,38 @@
 
 <!-- KPIs -->
 <div class="kpi-row">
-	<KpiCard label="Total Expenses {activeYear}" value={fmt(yearTotal)} delta={growth} deltaLabel="vs prior year" />
+	<KpiCard label="Total Expenses {activeYear}" value={fmt(yearTotal)} delta={growth} deltaLabel="vs prior year">
+		{#if notes['EXPENSES']}<NoteTooltip note={notes['EXPENSES']} label="Expenses" />{/if}
+	</KpiCard>
 	<KpiCard label="Categories" value={yearPoints.length} />
 	{#if yearPoints[0]}
-		<KpiCard label="Largest Category" value={yearPoints[0].label} />
+		<KpiCard label="Largest Category" value={yearPoints[0].label}>
+			{#if notes[yearPoints[0].label] || notes['Total ' + yearPoints[0].label]}
+				<NoteTooltip note={notes[yearPoints[0].label] ?? notes['Total ' + yearPoints[0].label]} label={yearPoints[0].label} />
+			{/if}
+		</KpiCard>
 	{/if}
 </div>
 
 <!-- Breakdown for selected year -->
 <div class="chart-row">
 	<div class="chart-section">
-		<HorizontalBarChart data={yearPoints} title="Expense Categories — {activeYear}" color="#f59e0b" width={500} />
+		<h3 class="chart-title">
+			Expense Categories — {activeYear}
+			{#if notes['EXPENSES']}<NoteTooltip note={notes['EXPENSES']} label="Expenses" />{/if}
+		</h3>
+		<HorizontalBarChart data={yearPoints} title="" color="#f59e0b" width={500} />
+		<!-- Per-category notes -->
+		{#if yearPoints.some(p => notes[p.label] || notes['Total ' + p.label])}
+			<ul class="category-notes">
+				{#each yearPoints as p}
+					{@const note = notes[p.label] ?? notes['Total ' + p.label]}
+					{#if note}
+						<li><strong>{p.label.replace(/^Total /, '')}</strong><NoteTooltip {note} label={p.label} /></li>
+					{/if}
+				{/each}
+			</ul>
+		{/if}
 	</div>
 	<div class="chart-section donut-section">
 		<DonutChart data={yearPoints.slice(0, 10)} title="Expense Mix — {activeYear}" size={280} />
@@ -70,4 +93,8 @@
 	.chart-row { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; }
 	.chart-row .chart-section { flex: 1; min-width: 300px; margin-bottom: 1.5rem; }
 	.donut-section { flex: 0 0 auto; }
+	.chart-title { font-size: 0.9rem; font-weight: 600; color: #374151; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.25rem; }
+	.category-notes { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+	.category-notes li { display: flex; align-items: center; font-size: 0.8rem; color: #6b7280; gap: 0.1rem; }
+	.category-notes li strong { color: #374151; font-weight: 500; }
 </style>

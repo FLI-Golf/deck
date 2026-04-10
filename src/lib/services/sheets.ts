@@ -1,13 +1,11 @@
-import { PUBLIC_GOOGLE_SHEET_CSV_URL } from '$env/static/public';
-
 type RawRow = string[];
 
-const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6ciri7chQvKJBCA087T_ajZTVf87JG5gysGvQiz344aCZ4F6-EFhJSawkYMzaMVxNV58dYk-M9xW7';
+const PUBLIC_GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6ciri7chQvKJBCA087T_ajZTVf87JG5gysGvQiz344aCZ4F6-EFhJSawkYMzaMVxNV58dYk-M9xW7';
 
 const SHEET_URLS = {
-	pnl:      `${BASE_URL}/pub?gid=913449617&single=true&output=csv`,
-	revenue:  `${BASE_URL}/pub?gid=288496811&single=true&output=csv`,
-	expenses: `${BASE_URL}/pub?gid=768312552&single=true&output=csv`,
+	pnl:      `${PUBLIC_GOOGLE_SHEET_CSV_URL}/pub?gid=913449617&single=true&output=csv`,
+	revenue:  `${PUBLIC_GOOGLE_SHEET_CSV_URL}/pub?gid=288496811&single=true&output=csv`,
+	expenses: `${PUBLIC_GOOGLE_SHEET_CSV_URL}/pub?gid=768312552&single=true&output=csv`,
 };
 
 // ---------------------------------------------------------------------------
@@ -49,6 +47,13 @@ export interface ExpensesSheet {
 }
 
 // ---------------------------------------------------------------------------
+// Notes map — keyed by row label, value is the full note text from col M
+// ---------------------------------------------------------------------------
+
+/** label -> descriptive note text from column M of the proforma assumptions sheet */
+export type NotesMap = Record<string, string>;
+
+// ---------------------------------------------------------------------------
 // Top-level combined type
 // ---------------------------------------------------------------------------
 
@@ -56,6 +61,8 @@ export interface AllSheets {
 	pnl: ParsedSheet;
 	revenue: RevenueSheet;
 	expenses: ExpensesSheet;
+	/** Notes from column M of the proforma assumptions sheet, keyed by row label */
+	notes: NotesMap;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,6 +80,7 @@ export async function loadAllSheets(): Promise<AllSheets> {
 		pnl:      parsePnlSheet(pnlText),
 		revenue:  parseRevenueSheet(revenueText),
 		expenses: parseExpensesSheet(expensesText),
+		notes:    parseNotesMap(expensesText),
 	};
 }
 
@@ -204,6 +212,38 @@ function parseExpensesSheet(text: string): ExpensesSheet {
 	}
 
 	return { years, categories, totals };
+}
+
+// ---------------------------------------------------------------------------
+// Notes parser — column M of the proforma assumptions sheet
+// Consecutive blank-col-A rows with col M content are appended to the
+// previous labelled row's note.
+// ---------------------------------------------------------------------------
+
+function parseNotesMap(text: string): NotesMap {
+	const rows = text.trim().split('\n').map(splitCSVLine);
+	const notes: NotesMap = {};
+	let lastLabel: string | null = null;
+
+	for (const row of rows) {
+		const label = row[0]?.trim() ?? '';
+		const note  = row[12]?.trim() ?? '';
+		if (!note) continue;
+
+		if (label) {
+			lastLabel = label;
+			notes[label] = (notes[label] ? notes[label] + ' ' : '') + note;
+		} else if (lastLabel) {
+			notes[lastLabel] = (notes[lastLabel] ? notes[lastLabel] + ' ' : '') + note;
+		}
+	}
+
+	// Trim all values
+	for (const key of Object.keys(notes)) {
+		notes[key] = notes[key].trim();
+	}
+
+	return notes;
 }
 
 // ---------------------------------------------------------------------------

@@ -62,11 +62,11 @@
 			<div class="error-banner"><strong>Error:</strong> {error}</div>
 		{:else if sheets}
 			{#if activeSection === 'pnl'}
-				<PnlSection sheet={sheets.pnl} />
+				<PnlSection sheet={sheets.pnl} notes={sheets.notes} />
 			{:else if activeSection === 'revenue'}
-				<RevenueSection sheet={sheets.revenue} />
+				<RevenueSection sheet={sheets.revenue} notes={sheets.notes} />
 			{:else if activeSection === 'expenses'}
-				<ExpensesSection sheet={sheets.expenses} />
+				<ExpensesSection sheet={sheets.expenses} notes={sheets.notes} />
 			{/if}
 		{/if}
 	</main>
