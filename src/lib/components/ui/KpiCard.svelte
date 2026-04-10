@@ -8,7 +8,7 @@
 </script>
 
 <div class="kpi-card">
-	<p class="kpi-label">{label}</p>
+	<p class="kpi-label">{label}<slot /></p>
 	<p class="kpi-value">
 		{typeof value === 'number' ? value.toLocaleString() : value}
 		{#if unit}<span class="kpi-unit">{unit}</span>{/if}
@@ -36,6 +36,8 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		margin: 0 0 0.35rem 0;
+		display: flex;
+		align-items: center;
 	}
 	.kpi-value {
 		font-size: 2rem;
