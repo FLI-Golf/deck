@@ -4,12 +4,13 @@
 	import PnlSection from '$lib/components/sections/PnlSection.svelte';
 	import RevenueSection from '$lib/components/sections/RevenueSection.svelte';
 	import ExpensesSection from '$lib/components/sections/ExpensesSection.svelte';
+	import AssumptionsSection from '$lib/components/sections/AssumptionsSection.svelte';
 	import type { AllSheets } from '$lib/services/sheets.js';
 
 	let sheets: AllSheets | null = null;
 	let error = '';
 	let loading = true;
-	let activeSection: 'pnl' | 'revenue' | 'expenses' = 'pnl';
+	let activeSection: 'pnl' | 'revenue' | 'expenses' | 'assumptions' = 'pnl';
 
 	onMount(async () => {
 		try {
@@ -22,9 +23,10 @@
 	});
 
 	const NAV = [
-		{ id: 'pnl',      label: 'P&L' },
-		{ id: 'revenue',  label: 'Revenue' },
-		{ id: 'expenses', label: 'Expenses' },
+		{ id: 'pnl',         label: 'P&L' },
+		{ id: 'revenue',     label: 'Revenue' },
+		{ id: 'expenses',    label: 'Expenses' },
+		{ id: 'assumptions', label: 'Assumptions' },
 	] as const;
 </script>
 
@@ -62,11 +64,13 @@
 			<div class="error-banner"><strong>Error:</strong> {error}</div>
 		{:else if sheets}
 			{#if activeSection === 'pnl'}
-				<PnlSection sheet={sheets.pnl} notes={sheets.notes} />
+				<PnlSection sheet={sheets.pnl} notes={sheets.notes} on:viewAssumptions={() => activeSection = 'assumptions'} />
 			{:else if activeSection === 'revenue'}
-				<RevenueSection sheet={sheets.revenue} notes={sheets.notes} />
+				<RevenueSection sheet={sheets.revenue} notes={sheets.notes} on:viewAssumptions={() => activeSection = 'assumptions'} />
 			{:else if activeSection === 'expenses'}
-				<ExpensesSection sheet={sheets.expenses} notes={sheets.notes} />
+				<ExpensesSection sheet={sheets.expenses} notes={sheets.notes} on:viewAssumptions={() => activeSection = 'assumptions'} />
+			{:else if activeSection === 'assumptions'}
+				<AssumptionsSection />
 			{/if}
 		{/if}
 	</main>
